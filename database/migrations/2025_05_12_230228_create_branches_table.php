@@ -13,7 +13,15 @@ return new class extends Migration
     {
         Schema::create('branches', function (Blueprint $table) {
             $table->id();
+            $table->string('name', 250);
+            $table->unsignedBigInteger('status_id');
+            $table->date('opening_date')->nullable();
+            $table->time('opening_time')->nullable();
+            $table->unsignedBigInteger('user_id')->nullable();
             $table->timestamps();
+
+            $table->foreign('status_id')->references('id')->on('statuses');
+            $table->foreign('user_id')->references('id')->on('users');
         });
     }
 

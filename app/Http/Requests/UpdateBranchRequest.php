@@ -11,7 +11,7 @@ class UpdateBranchRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,11 @@ class UpdateBranchRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'name' => 'required|string|max:250',
+            'status_id' => 'required|exists:statuses,id',
+            'opening_date' => 'nullable|date',
+            'opening_time' => 'nullable|date_format:H:i',
+            'user_id' => 'nullable|exists:users,id',
         ];
     }
 }

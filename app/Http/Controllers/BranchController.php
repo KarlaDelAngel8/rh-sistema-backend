@@ -2,65 +2,61 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Branch;
 use App\Http\Requests\StoreBranchRequest;
 use App\Http\Requests\UpdateBranchRequest;
+use App\Models\Branch;
+use App\Repositories\Global\ChangesStatusRepository;
+use App\Services\Global\SearchAndPaginateService;
+use App\Traits\ApiResponseTrait;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class BranchController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function __construct(
+        protected ChangesStatusRepository $changesStatusRepository,
+        protected SearchAndPaginateService $searchAndPaginateService
+    ){}
+    use ApiResponseTrait;
+
+    public function activeBranches(): JsonResponse
     {
-        //
+        $branches = Branch::orderBy('name', 'asc')->where('status_id', 1)->get();
+        return $this->success($branches->toArray(), 'Sucursales activas.');
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function index(Request $request): JsonResponse
     {
-        //
+        $searchColumns = ['name'];
+        $relationSearch = [
+            'status' => ['name'],
+        ];
+
+        $branches = $this->searchAndPaginateService->searchAndPaginate(
+            new Branch(),
+            $request,
+            $searchColumns,
+            $relationSearch,
+            $request->input('per_page', 10)
+        );
+
+        return $this->success($branches->toArray(), 'Sucursales activas.');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreBranchRequest $request)
+    public function store(StoreBranchRequest $request): JsonResponse
     {
-        //
+        $branch = Branch::create($request->all());
+        return $this->success($branch->toArray(), 'Sucursal creada exitosamente.', 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Branch $branch)
+    public function update(UpdateBranchRequest $request, $id): JsonResponse
     {
-        //
-    }
+        $branch = Branch::findOrFail($id);
+        $branch->update([
+            'name' => $request->input('nameEdit'),
+            'status_id' => $request->input('status_idEdit'),
+        ]);
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Branch $branch)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateBranchRequest $request, Branch $branch)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Branch $branch)
-    {
-        //
+        return $this->success($branch->toArray(), 'Sucursal actualizada exitosamente.');
     }
 }
